@@ -30,13 +30,16 @@ module OmniAuth
         {
           name:        raw_info['displayName'],
           image:       raw_info['pictureUrl'],
-          description: raw_info['statusMessage']
+          description: raw_info['statusMessage'],
+          email:       raw_info['email']
         }
       end
 
       # Require: Access token with PROFILE permission issued.
       def raw_info
         @raw_info ||= JSON.load(access_token.get('v2/profile').body)
+        email = JWT.decode(access_token['id_token'], options.client_secret, true, { algorithm: 'HS256' }).first["email"] rescue ''
+        @raw_info.merge!("email" => email)
       rescue ::Errno::ETIMEDOUT
         raise ::Timeout::Error
       end
